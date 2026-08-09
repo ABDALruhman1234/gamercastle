@@ -14,13 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      laptops: {
+        Row: {
+          category: string
+          cpu: string
+          created_at: string
+          gpu: string
+          id: string
+          image_url: string
+          model: string
+          price: number
+          ram: string
+          storage: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          cpu?: string
+          created_at?: string
+          gpu?: string
+          id?: string
+          image_url?: string
+          model: string
+          price?: number
+          ram?: string
+          storage?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cpu?: string
+          created_at?: string
+          gpu?: string
+          id?: string
+          image_url?: string
+          model?: string
+          price?: number
+          ram?: string
+          storage?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_store_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

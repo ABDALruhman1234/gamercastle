@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -11,6 +11,13 @@ import { NeonNav } from "@/components/NeonNav";
 import { ADMIN_EMAIL, formatPrice, laptopsQuery, type Laptop } from "@/lib/laptops";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  beforeLoad: ({ context }) => {
+    const email = (context as { user?: { email?: string } }).user?.email?.trim().toLowerCase();
+    if (email !== ADMIN_EMAIL) {
+      toast.error("Access denied — admin only.");
+      throw redirect({ to: "/" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Manage Catalog | Professional Store" },
@@ -45,8 +52,7 @@ function AdminPage() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [open, setOpen] = useState(false);
 
-  const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL;
-  const { data: laptops = [], isLoading } = useQuery({ ...laptopsQuery, enabled: isAdmin });
+  const { data: laptops = [], isLoading } = useQuery(laptopsQuery);
 
   const save = useMutation({
     mutationFn: async (state: FormState) => {
@@ -86,22 +92,8 @@ function AdminPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen grid-bg">
-        <NeonNav />
-        <main className="mx-auto max-w-md px-4 py-24 text-center">
-          <h1 className="font-display text-2xl font-black text-primary">ACCESS DENIED</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            This account is not authorized to manage the catalog.
-          </p>
-          <Button variant="cyber" className="mt-6" asChild>
-            <Link to="/">Back to store</Link>
-          </Button>
-        </main>
-      </div>
-    );
-  }
+
+
 
   const fields: Array<{ key: keyof FormState; label: string; type?: string }> = [
     { key: "model", label: "Model name" },

@@ -34,8 +34,10 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.navigate({ to: "/admin", replace: true });
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      const current = data.user.email?.trim().toLowerCase();
+      router.navigate({ to: current === ADMIN_EMAIL ? "/admin" : "/", replace: true });
     });
   }, [router]);
 
@@ -54,9 +56,10 @@ function AuthPage() {
         setMode("signin");
         return;
       }
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      if (email.trim().toLowerCase() !== ADMIN_EMAIL) {
+      const signedInEmail = data.user?.email?.trim().toLowerCase();
+      if (signedInEmail !== ADMIN_EMAIL) {
         toast.info("Signed in, but this account has no catalog access.");
         router.navigate({ to: "/", replace: true });
         return;

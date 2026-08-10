@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -11,6 +11,12 @@ import { NeonNav } from "@/components/NeonNav";
 import { ADMIN_EMAIL, formatPrice, laptopsQuery, type Laptop } from "@/lib/laptops";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  beforeLoad: ({ context }) => {
+    const email = (context as { user?: { email?: string } }).user?.email?.trim().toLowerCase();
+    if (email !== ADMIN_EMAIL) {
+      throw redirect({ to: "/", search: { denied: "1" } });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Manage Catalog | Professional Store" },

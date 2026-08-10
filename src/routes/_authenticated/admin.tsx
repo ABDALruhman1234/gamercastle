@@ -51,8 +51,7 @@ function AdminPage() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [open, setOpen] = useState(false);
 
-  const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL;
-  const { data: laptops = [], isLoading } = useQuery({ ...laptopsQuery, enabled: isAdmin });
+  const { data: laptops = [], isLoading } = useQuery(laptopsQuery);
 
   const save = useMutation({
     mutationFn: async (state: FormState) => {

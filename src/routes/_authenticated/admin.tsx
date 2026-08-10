@@ -14,7 +14,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: ({ context }) => {
     const email = (context as { user?: { email?: string } }).user?.email?.trim().toLowerCase();
     if (email !== ADMIN_EMAIL) {
-      throw redirect({ to: "/", search: { denied: "1" } });
+      toast.error("Access denied — admin only.");
+      throw redirect({ to: "/" });
     }
   },
   head: () => ({

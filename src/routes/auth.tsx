@@ -56,9 +56,20 @@ function AuthPage() {
         setMode("signin");
         return;
       }
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error && /invalid login credentials/i.test(error.message)) {
+        // Account doesn't exist yet — create it, then sign in.
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        if (signUpError) throw signUpError;
+        ({ data, error } = await supabase.auth.signInWithPassword({ email, password }));
+      }
       if (error) throw error;
       const signedInEmail = data.user?.email?.trim().toLowerCase();
+
       if (signedInEmail !== ADMIN_EMAIL) {
         toast.info("Signed in, but this account has no catalog access.");
         router.navigate({ to: "/", replace: true });

@@ -183,10 +183,28 @@
     border-color: var(--color-border);
   }
 
+  html {
+    background-color: #000000;
+    color: #ffffff;
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
-    background-color: var(--color-background);
+    background-color: #000000;
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    min-height: 100dvh;
+  }
+
+  #root,
+  body > div {
+    background-color: transparent;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
   }
 
   h1,
@@ -195,4 +213,5 @@
     font-family: var(--font-display);
   }
 }
+
 

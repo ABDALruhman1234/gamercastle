@@ -91,22 +91,8 @@ function AdminPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen grid-bg">
-        <NeonNav />
-        <main className="mx-auto max-w-md px-4 py-24 text-center">
-          <h1 className="font-display text-2xl font-black text-primary">ACCESS DENIED</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            This account is not authorized to manage the catalog.
-          </p>
-          <Button variant="cyber" className="mt-6" asChild>
-            <Link to="/">Back to store</Link>
-          </Button>
-        </main>
-      </div>
-    );
-  }
+
+
 
   const fields: Array<{ key: keyof FormState; label: string; type?: string }> = [
     { key: "model", label: "Model name" },

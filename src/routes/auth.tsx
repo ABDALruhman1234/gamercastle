@@ -49,6 +49,25 @@ function AuthPage() {
   }, [router]);
 
 
+  async function sendReset() {
+    if (!email) {
+      toast.error("Enter your email first, then tap reset.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent. Check your inbox.");
+    } catch (err) {
+      toast.error(friendlyError(err, "Could not send the reset email."));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -60,20 +79,45 @@ function AuthPage() {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success("Account created. Check your email to confirm, then sign in.");
+        toast.success("Account created. You can sign in now.");
         setMode("signin");
         return;
       }
+
       let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      // Email not verified yet — resend the confirmation and explain clearly.
+      if (error && /email not confirmed|not confirmed/i.test(error.message)) {
+        await supabase.auth
+          .resend({ type: "signup", email, options: { emailRedirectTo: window.location.origin } })
+          .catch(() => undefined);
+        toast.error("Email not verified yet — we just sent a new confirmation link.");
+        return;
+      }
+
       if (error && /invalid login credentials/i.test(error.message)) {
-        // Account doesn't exist yet — create it, then sign in.
+        // Either the account does not exist yet, or the password is wrong.
         const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin },
         });
-        if (signUpError) throw signUpError;
+        if (signUpError) {
+          if (/already registered|already exists|user_already/i.test(signUpError.message)) {
+            toast.error("Incorrect password for this account. Use “Forgot password?” to reset it.");
+            return;
+          }
+          if (/pwned|breach|weak/i.test(signUpError.message)) {
+            toast.error("That password appears in a known data breach. Choose a stronger one.");
+            return;
+          }
+          throw signUpError;
+        }
         ({ data, error } = await supabase.auth.signInWithPassword({ email, password }));
+        if (error && /not confirmed/i.test(error.message)) {
+          toast.success("Account created. Confirm your email, then sign in.");
+          return;
+        }
       }
       if (error) throw error;
       const signedInEmail = data.user?.email?.trim().toLowerCase();
@@ -92,6 +136,7 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="min-h-screen grid-bg">

@@ -30,7 +30,7 @@ export const laptopsQuery = {
 };
 
 export function whatsappLink(model: string) {
-  const message = `Hello Professional Store, I want to order the ${model}`;
+  const message = `مرحباً لابتوبات سوريا، أريد طلب جهاز ${model}`;
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 

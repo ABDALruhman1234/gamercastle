@@ -26,9 +26,13 @@ export function NeonNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl shadow-[0_1px_24px_-6px_var(--primary)]">
       <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link to="/" className="font-display text-lg font-black tracking-[0.2em] sm:text-xl">
-          <span className="text-rgb">PROFESSIONAL</span>{" "}
-          <span className="text-foreground">STORE</span>
+        <Link
+          to="/"
+          className="font-display text-lg font-black tracking-[0.15em] sm:text-xl"
+          dir="rtl"
+        >
+          <span className="text-rgb">لابتوبات سوريا</span>{" "}
+          <span className="text-foreground">(Syria Laptops)</span>
         </Link>
         <div className="flex items-center gap-2">
           {isAdmin && (

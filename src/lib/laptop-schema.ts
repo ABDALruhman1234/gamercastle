@@ -37,10 +37,11 @@ export const laptopSchema = z.object({
     .pipe(
       z
         .number()
-        .refine(Number.isFinite, "Price must be a number")
         .min(0, "Price cannot be negative")
-        .max(1_000_000, "Price is unrealistically high"),
+        .max(1_000_000, "Price is unrealistically high")
+        .refine(Number.isFinite, "Price must be a number"),
     ),
+
   image_url: imageUrl,
   category: z.enum(CATEGORY_VALUES, { errorMap: () => ({ message: "Invalid category" }) }),
   cpu: safeText("CPU", 120),

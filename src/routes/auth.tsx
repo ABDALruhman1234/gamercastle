@@ -36,12 +36,18 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      const current = data.user.email?.trim().toLowerCase();
-      router.navigate({ to: current === ADMIN_EMAIL ? "/admin" : "/", replace: true });
-    });
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (!data.user) return;
+        const current = data.user.email?.trim().toLowerCase();
+        router.navigate({ to: current === ADMIN_EMAIL ? "/admin" : "/", replace: true });
+      })
+      .catch(() => {
+        // No active session (or the backend is unreachable) — stay on the login form.
+      });
   }, [router]);
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

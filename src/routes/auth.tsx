@@ -188,6 +188,16 @@ function AuthPage() {
           >
             {mode === "signin" ? "Need an account? Sign up" : "Already registered? Sign in"}
           </button>
+
+          <button
+            type="button"
+            disabled={loading}
+            className="mt-2 w-full cursor-pointer text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+            onClick={sendReset}
+          >
+            Forgot password?
+          </button>
+
         </div>
       </main>
     </div>

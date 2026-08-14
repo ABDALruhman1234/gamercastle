@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NeonNav } from "@/components/NeonNav";
 import { ADMIN_EMAIL, formatPrice, laptopsQuery, type Laptop } from "@/lib/laptops";
+import { friendlyError, laptopSchema } from "@/lib/laptop-schema";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: ({ context }) => {
@@ -56,16 +58,20 @@ function AdminPage() {
 
   const save = useMutation({
     mutationFn: async (state: FormState) => {
-      const payload = {
+      const parsed = laptopSchema.safeParse({
         model: state.model,
-        price: Number(state.price) || 0,
+        price: state.price,
         image_url: state.image_url,
         category: state.category,
         cpu: state.cpu,
         gpu: state.gpu,
         ram: state.ram,
         storage: state.storage,
-      };
+      });
+      if (!parsed.success) {
+        throw new Error(parsed.error.issues[0]?.message ?? "Please check the form fields.");
+      }
+      const payload = parsed.data;
       const { error } = state.id
         ? await supabase.from("laptops").update(payload).eq("id", state.id)
         : await supabase.from("laptops").insert(payload);
@@ -77,7 +83,7 @@ function AdminPage() {
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ["laptops"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(friendlyError(e, "Could not save this laptop.")),
   });
 
   const remove = useMutation({
@@ -89,8 +95,9 @@ function AdminPage() {
       toast.success("Laptop deleted");
       queryClient.invalidateQueries({ queryKey: ["laptops"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(friendlyError(e, "Could not delete this laptop.")),
   });
+
 
 
 

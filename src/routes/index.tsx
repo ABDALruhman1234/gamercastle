@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Storefront() {
-  const { data: laptops = [], isLoading } = useQuery(laptopsQuery);
+  const { data: laptops = [], isLoading, isError } = useQuery({ ...laptopsQuery, retry: 1 });
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("All");
 
@@ -104,17 +104,24 @@ function Storefront() {
             {isLoading ? "Scanning inventory…" : `${filtered.length} units found`}
           </p>
 
-          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filtered.map((laptop) => (
-              <LaptopCard key={laptop.id} laptop={laptop} />
-            ))}
-          </div>
+          {isError ? (
+            <p className="py-16 text-center text-muted-foreground">
+              We couldn&apos;t load the catalog right now. Please refresh and try again.
+            </p>
+          ) : (
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filtered.map((laptop) => (
+                <LaptopCard key={laptop.id} laptop={laptop} />
+              ))}
+            </div>
+          )}
 
-          {!isLoading && filtered.length === 0 && (
+          {!isLoading && !isError && filtered.length === 0 && (
             <p className="py-16 text-center text-muted-foreground">
               No rigs match that search. Try another keyword.
             </p>
           )}
+
         </section>
       </main>
 

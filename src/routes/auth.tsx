@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NeonNav } from "@/components/NeonNav";
 import { ADMIN_EMAIL } from "@/lib/laptops";
+import { friendlyError } from "@/lib/laptop-schema";
+
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -34,12 +36,18 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      const current = data.user.email?.trim().toLowerCase();
-      router.navigate({ to: current === ADMIN_EMAIL ? "/admin" : "/", replace: true });
-    });
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (!data.user) return;
+        const current = data.user.email?.trim().toLowerCase();
+        router.navigate({ to: current === ADMIN_EMAIL ? "/admin" : "/", replace: true });
+      })
+      .catch(() => {
+        // No active session (or the backend is unreachable) — stay on the login form.
+      });
   }, [router]);
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -78,8 +86,9 @@ function AuthPage() {
       toast.success("Access granted, operator.");
       router.navigate({ to: "/admin", replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed");
+      toast.error(friendlyError(err, "Authentication failed. Please try again."));
     } finally {
+
       setLoading(false);
     }
   }

@@ -1,6 +1,8 @@
 import { Cpu, HardDrive, MemoryStick, MonitorPlay, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { safeImageUrl } from "@/lib/laptop-schema";
 import { formatPrice, whatsappLink, type Laptop } from "@/lib/laptops";
+
 
 export function LaptopCard({ laptop }: { laptop: Laptop }) {
   const specs = [
@@ -14,7 +16,7 @@ export function LaptopCard({ laptop }: { laptop: Laptop }) {
     <article className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card/60 transition-all duration-300 hover:-translate-y-1 hover:border-secondary hover:shadow-[0_0_30px_-4px_var(--secondary)]">
       <div className="relative aspect-16/10 overflow-hidden bg-muted">
         <img
-          src={laptop.image_url}
+          src={safeImageUrl(laptop.image_url)}
           alt={`${laptop.model} gaming laptop`}
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

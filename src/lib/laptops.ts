@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const ADMIN_EMAIL = "a16268455@gmail.com";
-export const WHATSAPP_NUMBER = "1234567890";
+export const WHATSAPP_NUMBER = "963959384689";
 
 export const CATEGORIES = ["All", "Ultra Gaming", "Mid-Range", "Budget"] as const;
 

@@ -21,36 +21,37 @@ export function LaptopCard({ laptop }: { laptop: Laptop }) {
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <span className="absolute left-3 top-3 rounded-full border border-primary/60 bg-background/80 px-3 py-1 font-display text-[10px] uppercase tracking-widest text-primary">
+        <span className="absolute left-2 top-2 rounded-full border border-primary/60 bg-background/80 px-2 py-0.5 font-display text-[9px] uppercase tracking-widest text-primary sm:left-3 sm:top-3 sm:px-3 sm:py-1 sm:text-[10px]">
           {laptop.category}
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col gap-4 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-display text-base font-bold leading-tight text-foreground">
+      <div className="flex flex-1 flex-col gap-3 p-3 sm:gap-4 sm:p-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+          <h3 className="min-w-0 flex-1 font-display text-sm font-bold leading-tight text-foreground sm:text-base">
             {laptop.model}
           </h3>
-          <span className="whitespace-nowrap font-display text-lg font-black text-secondary drop-shadow-[0_0_10px_var(--secondary)]">
+          <span className="whitespace-nowrap font-display text-base font-black text-secondary drop-shadow-[0_0_10px_var(--secondary)] sm:text-lg">
             {formatPrice(laptop.price)}
           </span>
         </div>
 
-        <ul className="flex flex-1 flex-col gap-1.5 text-sm text-muted-foreground">
+        <ul className="flex flex-1 flex-col gap-1.5 text-xs text-muted-foreground sm:text-sm">
           {specs.map(({ icon: Icon, label }) => (
             <li key={label} className="flex items-center gap-2">
-              <Icon className="size-4 text-accent" />
-              <span>{label}</span>
+              <Icon className="size-3.5 shrink-0 text-accent sm:size-4" />
+              <span className="truncate">{label}</span>
             </li>
           ))}
         </ul>
 
-        <Button variant="whatsapp" className="w-full" asChild>
+        <Button variant="whatsapp" className="h-11 w-full text-xs sm:text-sm" asChild>
           <a href={whatsappLink(laptop.model)} target="_blank" rel="noopener noreferrer">
             <MessageCircle />
             Order on WhatsApp
           </a>
         </Button>
+
       </div>
     </article>
   );

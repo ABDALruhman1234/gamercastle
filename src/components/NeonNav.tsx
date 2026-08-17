@@ -25,32 +25,38 @@ export function NeonNav() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl shadow-[0_1px_24px_-6px_var(--primary)]">
-      <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
         <Link
           to="/"
-          className="font-display text-lg font-black tracking-[0.15em] sm:text-xl"
+          className="min-w-0 font-display text-sm font-black leading-tight tracking-[0.08em] sm:text-lg sm:tracking-[0.15em] lg:text-xl"
           dir="rtl"
         >
           <span className="text-rgb">لابتوبات سوريا</span>{" "}
-          <span className="text-foreground">(Syria Laptops)</span>
+          <span className="hidden text-foreground sm:inline">(Syria Laptops)</span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {isAdmin && (
-            <Button variant="cyber" size="sm" asChild>
+            <Button variant="cyber" size="sm" className="px-2.5 text-xs sm:px-3 sm:text-sm" asChild>
               <Link to="/admin">Dashboard</Link>
             </Button>
           )}
           {email ? (
-            <Button variant="neon" size="sm" onClick={signOut}>
+            <Button
+              variant="neon"
+              size="sm"
+              className="px-2.5 text-xs sm:px-3 sm:text-sm"
+              onClick={signOut}
+            >
               Sign out
             </Button>
           ) : (
-            <Button variant="neon" size="sm" asChild>
+            <Button variant="neon" size="sm" className="px-2.5 text-xs sm:px-3 sm:text-sm" asChild>
               <Link to="/auth">Admin Login</Link>
             </Button>
           )}
         </div>
       </nav>
     </header>
+
   );
 }

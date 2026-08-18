@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NeonNav } from "@/components/NeonNav";
 import { ADMIN_EMAIL, formatPrice, laptopsQuery, type Laptop } from "@/lib/laptops";
-import { friendlyError, laptopSchema } from "@/lib/laptop-schema";
+import { friendlyError, laptopSchema, safeImageUrl } from "@/lib/laptop-schema";
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -102,10 +102,42 @@ function AdminPage() {
 
 
 
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be smaller than 5 MB.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `${crypto.randomUUID()}.${ext || "jpg"}`;
+      const { error: upErr } = await supabase.storage
+        .from("laptop-images")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data, error: urlErr } = await supabase.storage
+        .from("laptop-images")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (urlErr || !data?.signedUrl) throw urlErr ?? new Error("no url");
+      const url = new URL(data.signedUrl, window.location.origin).toString();
+      setForm((f) => ({ ...f, image_url: url }));
+      toast.success("Image uploaded");
+    } catch (e) {
+      toast.error(friendlyError(e, "Could not upload this image."));
+    } finally {
+      setUploading(false);
+    }
+  }
+
   const fields: Array<{ key: keyof FormState; label: string; type?: string }> = [
     { key: "model", label: "Model name" },
     { key: "price", label: "Price (USD)", type: "number" },
-    { key: "image_url", label: "Image URL", type: "url" },
     { key: "cpu", label: "CPU" },
     { key: "gpu", label: "GPU" },
     { key: "ram", label: "RAM" },
@@ -165,6 +197,36 @@ function AdminPage() {
                   />
                 </div>
               ))}
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="image_file">Laptop image</Label>
+                <div className="flex items-center gap-3">
+                  {form.image_url ? (
+                    <img
+                      src={safeImageUrl(form.image_url)}
+                      alt="Selected laptop preview"
+                      className="size-14 shrink-0 rounded-md border border-border object-cover"
+                    />
+                  ) : null}
+                  <input
+                    id="image_file"
+                    type="file"
+                    accept="image/*"
+                    className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border file:border-secondary/60 file:bg-secondary/10 file:px-3 file:py-2 file:text-xs file:text-secondary"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void handleFile(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {uploading
+                    ? "Uploading image…"
+                    : form.image_url
+                      ? "Image ready."
+                      : "Choose an image from your device (max 5 MB)."}
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <select
@@ -181,8 +243,18 @@ function AdminPage() {
                 </select>
               </div>
               <div className="flex items-end sm:col-span-2 lg:col-span-4">
-                <Button variant="whatsapp" type="submit" disabled={save.isPending}>
-                  {save.isPending ? "Saving…" : form.id ? "Save changes" : "Add to catalog"}
+                <Button
+                  variant="whatsapp"
+                  type="submit"
+                  disabled={save.isPending || uploading || !form.image_url}
+                >
+                  {save.isPending
+                    ? "Saving…"
+                    : uploading
+                      ? "Uploading…"
+                      : form.id
+                        ? "Save changes"
+                        : "Add to catalog"}
                 </Button>
               </div>
             </form>

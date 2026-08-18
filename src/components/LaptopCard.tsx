@@ -13,7 +13,7 @@ export function LaptopCard({ laptop }: { laptop: Laptop }) {
   ];
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card/60 transition-all duration-300 hover:-translate-y-1 hover:border-secondary hover:shadow-[0_0_30px_-4px_var(--secondary)]">
+    <article className="group relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card/60 transition-all duration-300 hover:-translate-y-1 hover:border-secondary hover:shadow-[0_0_30px_-4px_var(--secondary)]">
       <div className="relative aspect-16/10 overflow-hidden bg-muted">
         <img
           src={safeImageUrl(laptop.image_url)}
@@ -27,11 +27,11 @@ export function LaptopCard({ laptop }: { laptop: Laptop }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-3 sm:gap-4 sm:p-4">
-        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
           <h3 className="min-w-0 flex-1 font-display text-sm font-bold leading-tight text-foreground sm:text-base">
             {laptop.model}
           </h3>
-          <span className="whitespace-nowrap font-display text-base font-black text-secondary drop-shadow-[0_0_10px_var(--secondary)] sm:text-lg">
+          <span className="shrink-0 whitespace-nowrap font-display text-sm font-black text-secondary drop-shadow-[0_0_10px_var(--secondary)] min-[360px]:text-base sm:text-lg">
             {formatPrice(laptop.price)}
           </span>
         </div>

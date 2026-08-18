@@ -188,6 +188,7 @@
     color: #ffffff;
     color-scheme: dark;
     -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
   }
 
   body {
@@ -195,6 +196,8 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     min-height: 100dvh;
+    min-width: 320px;
+    overflow-x: hidden;
   }
 
   #root,
@@ -203,6 +206,7 @@
   }
 
   img {
+    display: block;
     max-width: 100%;
     height: auto;
   }

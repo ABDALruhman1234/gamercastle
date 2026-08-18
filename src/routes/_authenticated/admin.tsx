@@ -197,6 +197,36 @@ function AdminPage() {
                   />
                 </div>
               ))}
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="image_file">Laptop image</Label>
+                <div className="flex items-center gap-3">
+                  {form.image_url ? (
+                    <img
+                      src={safeImageUrl(form.image_url)}
+                      alt="Selected laptop preview"
+                      className="size-14 shrink-0 rounded-md border border-border object-cover"
+                    />
+                  ) : null}
+                  <input
+                    id="image_file"
+                    type="file"
+                    accept="image/*"
+                    className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border file:border-secondary/60 file:bg-secondary/10 file:px-3 file:py-2 file:text-xs file:text-secondary"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void handleFile(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {uploading
+                    ? "Uploading image…"
+                    : form.image_url
+                      ? "Image ready."
+                      : "Choose an image from your device (max 5 MB)."}
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <select

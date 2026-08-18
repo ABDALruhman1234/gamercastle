@@ -147,13 +147,13 @@ function AdminPage() {
   return (
     <div className="min-h-screen grid-bg">
       <NeonNav />
-      <main className="mx-auto max-w-7xl px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="font-display text-2xl font-black tracking-widest text-rgb sm:text-3xl">
+      <main className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-10">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 sm:flex sm:flex-wrap sm:justify-between sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="font-display text-xl font-black tracking-widest text-rgb sm:text-3xl">
               MANAGE CATALOG
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 truncate text-xs text-muted-foreground sm:text-sm">
               {laptops.length} units in inventory · signed in as {user.email}
             </p>
           </div>
@@ -164,12 +164,12 @@ function AdminPage() {
               setOpen(true);
             }}
           >
-            <Plus /> Add laptop
+            <Plus /> <span className="hidden min-[380px]:inline">Add laptop</span>
           </Button>
         </div>
 
         {open && (
-          <section className="neon-panel mt-6 animate-rise rounded-xl p-5">
+          <section className="neon-panel mt-6 animate-rise rounded-lg p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-sm uppercase tracking-widest text-secondary">
                 {form.id ? "Edit laptop" : "New laptop"}
@@ -199,7 +199,7 @@ function AdminPage() {
               ))}
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="image_file">Laptop image</Label>
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 flex-col gap-3 min-[380px]:flex-row min-[380px]:items-center">
                   {form.image_url ? (
                     <img
                       src={safeImageUrl(form.image_url)}
@@ -211,7 +211,7 @@ function AdminPage() {
                     id="image_file"
                     type="file"
                     accept="image/*"
-                    className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border file:border-secondary/60 file:bg-secondary/10 file:px-3 file:py-2 file:text-xs file:text-secondary"
+                    className="block min-w-0 w-full text-xs text-muted-foreground file:mr-2 file:rounded-md file:border file:border-secondary/60 file:bg-secondary/10 file:px-2 file:py-2 file:text-xs file:text-secondary sm:file:mr-3 sm:file:px-3"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) void handleFile(file);
@@ -244,6 +244,7 @@ function AdminPage() {
               </div>
               <div className="flex items-end sm:col-span-2 lg:col-span-4">
                 <Button
+                  className="w-full sm:w-auto"
                   variant="whatsapp"
                   type="submit"
                   disabled={save.isPending || uploading || !form.image_url}
@@ -261,7 +262,7 @@ function AdminPage() {
           </section>
         )}
 
-        <section className="neon-panel mt-6 overflow-x-auto rounded-xl">
+        <section className="neon-panel mt-6 hidden overflow-x-auto rounded-lg md:block">
           <table className="w-full min-w-[820px] text-left text-sm">
             <thead className="font-display text-[11px] uppercase tracking-widest text-secondary">
               <tr className="border-b border-border">
@@ -322,6 +323,35 @@ function AdminPage() {
               ))}
             </tbody>
           </table>
+        </section>
+
+        <section className="mt-5 grid gap-3 md:hidden" aria-label="Inventory list">
+          {isLoading && <p className="py-6 text-center text-muted-foreground">Loading inventory…</p>}
+          {laptops.map((l) => (
+            <article key={l.id} className="neon-panel min-w-0 rounded-lg p-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                <div className="min-w-0">
+                  <h2 className="truncate font-display text-sm font-bold text-foreground">{l.model}</h2>
+                  <p className="mt-1 text-xs text-primary">{l.category}</p>
+                </div>
+                <span className="shrink-0 font-display text-sm font-bold text-accent">{formatPrice(l.price)}</span>
+              </div>
+              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                <div className="min-w-0"><dt className="text-secondary">CPU</dt><dd className="truncate text-muted-foreground">{l.cpu}</dd></div>
+                <div className="min-w-0"><dt className="text-secondary">GPU</dt><dd className="truncate text-muted-foreground">{l.gpu}</dd></div>
+                <div className="min-w-0"><dt className="text-secondary">RAM</dt><dd className="truncate text-muted-foreground">{l.ram}</dd></div>
+                <div className="min-w-0"><dt className="text-secondary">Storage</dt><dd className="truncate text-muted-foreground">{l.storage}</dd></div>
+              </dl>
+              <div className="mt-3 flex justify-end gap-2 border-t border-border/50 pt-3">
+                <Button variant="cyber" size="sm" onClick={() => { setForm({ ...l, price: String(l.price) }); setOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                  <Pencil /> Edit
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => { if (confirm(`Delete ${l.model}?`)) remove.mutate(l.id); }}>
+                  <Trash2 /> Delete
+                </Button>
+              </div>
+            </article>
+          ))}
         </section>
 
         <Button variant="ghost" className="mt-6" onClick={() => router.navigate({ to: "/" })}>

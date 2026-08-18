@@ -141,9 +141,9 @@ function AuthPage() {
   return (
     <div className="min-h-screen grid-bg">
       <NeonNav />
-      <main className="mx-auto flex max-w-md flex-col justify-center px-4 py-16">
-        <div className="neon-panel animate-rise rounded-2xl p-6 sm:p-8">
-          <h1 className="font-display text-2xl font-black tracking-widest text-rgb">
+      <main className="mx-auto flex min-h-[calc(100dvh-61px)] w-full max-w-md flex-col justify-center px-3 py-8 sm:px-4 sm:py-16">
+        <div className="neon-panel animate-rise rounded-lg p-5 sm:p-8">
+          <h1 className="font-display text-xl font-black tracking-widest text-rgb sm:text-2xl">
             SECURE ACCESS
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -181,22 +181,24 @@ function AuthPage() {
             </Button>
           </form>
 
-          <button
+          <Button
             type="button"
-            className="mt-4 w-full cursor-pointer text-center text-sm text-secondary underline-offset-4 hover:underline"
+            variant="link"
+            className="mt-3 h-auto w-full whitespace-normal py-1 text-center text-sm text-secondary"
             onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
           >
             {mode === "signin" ? "Need an account? Sign up" : "Already registered? Sign in"}
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="link"
             disabled={loading}
-            className="mt-2 w-full cursor-pointer text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+            className="mt-1 h-auto w-full py-1 text-center text-sm text-muted-foreground"
             onClick={sendReset}
           >
             Forgot password?
-          </button>
+          </Button>
 
         </div>
       </main>

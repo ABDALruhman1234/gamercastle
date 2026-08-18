@@ -102,10 +102,42 @@ function AdminPage() {
 
 
 
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be smaller than 5 MB.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `${crypto.randomUUID()}.${ext || "jpg"}`;
+      const { error: upErr } = await supabase.storage
+        .from("laptop-images")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data, error: urlErr } = await supabase.storage
+        .from("laptop-images")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (urlErr || !data?.signedUrl) throw urlErr ?? new Error("no url");
+      const url = new URL(data.signedUrl, window.location.origin).toString();
+      setForm((f) => ({ ...f, image_url: url }));
+      toast.success("Image uploaded");
+    } catch (e) {
+      toast.error(friendlyError(e, "Could not upload this image."));
+    } finally {
+      setUploading(false);
+    }
+  }
+
   const fields: Array<{ key: keyof FormState; label: string; type?: string }> = [
     { key: "model", label: "Model name" },
     { key: "price", label: "Price (USD)", type: "number" },
-    { key: "image_url", label: "Image URL", type: "url" },
     { key: "cpu", label: "CPU" },
     { key: "gpu", label: "GPU" },
     { key: "ram", label: "RAM" },

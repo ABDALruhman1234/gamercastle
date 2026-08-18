@@ -243,8 +243,18 @@ function AdminPage() {
                 </select>
               </div>
               <div className="flex items-end sm:col-span-2 lg:col-span-4">
-                <Button variant="whatsapp" type="submit" disabled={save.isPending}>
-                  {save.isPending ? "Saving…" : form.id ? "Save changes" : "Add to catalog"}
+                <Button
+                  variant="whatsapp"
+                  type="submit"
+                  disabled={save.isPending || uploading || !form.image_url}
+                >
+                  {save.isPending
+                    ? "Saving…"
+                    : uploading
+                      ? "Uploading…"
+                      : form.id
+                        ? "Save changes"
+                        : "Add to catalog"}
                 </Button>
               </div>
             </form>

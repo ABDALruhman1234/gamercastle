@@ -49,17 +49,17 @@ function Storefront() {
   }, [laptops, search, category]);
 
   return (
-    <div className="min-h-screen grid-bg">
+    <div className="grid-bg min-h-[100svh] w-full overflow-x-clip bg-background text-foreground">
       <NeonNav />
 
       <main>
         <section className="relative overflow-hidden border-b border-border/60 px-3 py-10 text-center sm:px-4 sm:py-20 lg:py-28">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklab,var(--primary)_18%,transparent),transparent_70%)]" />
-          <div className="relative mx-auto max-w-4xl">
+          <div className="relative mx-auto min-w-0 max-w-4xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/50 px-3 py-1 font-display text-[9px] uppercase tracking-[0.2em] text-accent shadow-[var(--glow-lime)] sm:px-4 sm:text-[10px] sm:tracking-[0.3em]">
               <Zap className="size-3" /> RTX 40 Series In Stock
             </span>
-            <h1 className="animate-flicker mt-5 font-display text-3xl font-black leading-[1.08] sm:text-6xl lg:text-7xl">
+            <h1 className="animate-flicker mt-5 max-w-full font-display text-3xl font-black leading-[1.08] sm:text-6xl lg:text-7xl">
               <span className="text-rgb">LEVEL UP YOUR GEAR</span>
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-lg">
@@ -70,8 +70,8 @@ function Storefront() {
         </section>
 
         <section className="mx-auto max-w-7xl px-3 py-8 sm:px-4 sm:py-10">
-          <div className="neon-panel flex min-w-0 flex-col gap-3 rounded-lg p-3 sm:gap-4 sm:p-4 md:flex-row md:items-center">
-            <div className="relative flex-1">
+          <div className="neon-panel grid min-w-0 gap-3 rounded-lg p-3 sm:gap-4 sm:p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+            <div className="relative min-w-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-secondary" />
               <Input
                 type="search"
@@ -82,7 +82,7 @@ function Storefront() {
                 className="h-11 pl-9"
               />
             </div>
-            <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
+            <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap md:justify-end">
               {CATEGORIES.map((c) => (
                 <Button
                   key={c}
@@ -90,7 +90,7 @@ function Storefront() {
                   variant="ghost"
                   onClick={() => setCategory(c)}
                   className={cn(
-                    "h-9 shrink-0 rounded-full border px-3.5 font-display text-[10px] uppercase tracking-widest transition-all sm:px-4 sm:text-[11px]",
+                    "h-9 min-w-0 rounded-full border px-2 font-display text-[9px] uppercase tracking-widest transition-all sm:shrink-0 sm:px-4 sm:text-[11px]",
                     category === c
                       ? "border-primary bg-primary/15 text-primary shadow-[var(--glow-pink)]"
                       : "border-border text-muted-foreground hover:border-secondary hover:text-secondary",

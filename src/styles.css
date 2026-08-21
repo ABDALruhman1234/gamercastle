@@ -202,12 +202,33 @@
 
   body {
     background-color: #000000;
+    background-image:
+      radial-gradient(
+        ellipse 90% 55% at 50% -5%,
+        color-mix(in oklab, var(--primary) 30%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 80% 50% at 0% 30%,
+        color-mix(in oklab, var(--secondary) 20%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 80% 50% at 100% 75%,
+        color-mix(in oklab, var(--accent) 16%, transparent),
+        transparent 70%
+      );
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
     color: var(--color-foreground);
     font-family: var(--font-sans);
     min-height: 100dvh;
     min-width: 320px;
     overflow-x: hidden;
   }
+
 
   #root,
   body > div {

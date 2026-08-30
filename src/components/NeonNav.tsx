@@ -29,10 +29,8 @@ export function NeonNav() {
         <Link
           to="/"
           className="min-w-0 truncate font-display text-xs font-black leading-tight tracking-[0.08em] min-[360px]:text-sm sm:text-lg sm:tracking-[0.15em] lg:text-xl"
-          dir="rtl"
         >
-          <span className="text-rgb">لابتوبات سوريا</span>{" "}
-          <span className="hidden text-foreground sm:inline">(Syria Laptops)</span>
+          <span className="text-rgb">GAMER CASTLE</span>
         </Link>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {isAdmin && (

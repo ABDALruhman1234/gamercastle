@@ -6,23 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NeonNav } from "@/components/NeonNav";
-import { ADMIN_EMAIL } from "@/lib/laptops";
+import { ADMIN_EMAIL } from "@/lib/products";
 import { friendlyError } from "@/lib/laptop-schema";
 
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Admin Login | Professional Store" },
+      { title: "Admin Login | OSINT store" },
       {
         name: "description",
-        content: "Secure staff login for the Professional Store gaming laptop catalog manager.",
+        content: "Secure staff login for the OSINT store product catalog manager.",
       },
-      { property: "og:title", content: "Admin Login | Professional Store" },
+      { property: "og:title", content: "Admin Login | OSINT store" },
       {
         property: "og:description",
-        content: "Secure staff login for the Professional Store gaming laptop catalog manager.",
+        content: "Secure staff login for the OSINT store product catalog manager.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,

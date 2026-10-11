@@ -1,362 +1,101 @@
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Trash2, X, Check, PackageOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { NeonNav } from "@/components/NeonNav";
-import { ADMIN_EMAIL, formatPrice, laptopsQuery, type Laptop } from "@/lib/laptops";
-import { friendlyError, laptopSchema, safeImageUrl } from "@/lib/laptop-schema";
-
+import { ADMIN_EMAIL, formatPrice, productsQuery, productSchema, type Product } from "@/lib/products";
+import { friendlyError } from "@/lib/laptop-schema";
+import { useProductsLive } from "@/hooks/use-products-live";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: ({ context }) => {
-    const email = (context as { user?: { email?: string } }).user?.email?.trim().toLowerCase();
+    const email = context.user.email?.trim().toLowerCase();
     if (email !== ADMIN_EMAIL) {
       toast.error("Access denied — admin only.");
       throw redirect({ to: "/" });
     }
   },
-  head: () => ({
-    meta: [
-      { title: "Manage Catalog | Professional Store" },
-      { name: "description", content: "Private dashboard to manage the gaming laptop inventory." },
-      { property: "og:title", content: "Manage Catalog | Professional Store" },
-      {
-        property: "og:description",
-        content: "Private dashboard to manage the gaming laptop inventory.",
-      },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "Manage Products | OSINT store" },
+    { name: "description", content: "Private product management for OSINT store." },
+    { property: "og:title", content: "Manage Products | OSINT store" },
+    { property: "og:description", content: "Private product management for OSINT store." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AdminPage,
 });
 
-type FormState = Omit<Laptop, "id" | "price"> & { id?: string; price: string };
-
-const emptyForm: FormState = {
-  model: "",
-  price: "",
-  image_url: "",
-  category: "Ultra Gaming",
-  cpu: "",
-  gpu: "",
-  ram: "",
-  storage: "",
-};
-
+type FormState = { id?: string; name: string; description: string; price: string };
+const emptyForm: FormState = { name: "", description: "", price: "" };
 function AdminPage() {
-  const { user } = Route.useRouteContext();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<FormState>(emptyForm);
   const [open, setOpen] = useState(false);
-
-  const { data: laptops = [], isLoading } = useQuery(laptopsQuery);
-
+  const { data: products = [], isLoading, isError, refetch } = useQuery(productsQuery);
+  useProductsLive();
   const save = useMutation({
     mutationFn: async (state: FormState) => {
-      const parsed = laptopSchema.safeParse({
-        model: state.model,
-        price: state.price,
-        image_url: state.image_url,
-        category: state.category,
-        cpu: state.cpu,
-        gpu: state.gpu,
-        ram: state.ram,
-        storage: state.storage,
-      });
-      if (!parsed.success) {
-        throw new Error(parsed.error.issues[0]?.message ?? "Please check the form fields.");
-      }
-      const payload = parsed.data;
-      const { error } = state.id
-        ? await supabase.from("laptops").update(payload).eq("id", state.id)
-        : await supabase.from("laptops").insert(payload);
-      if (error) throw error;
+      const parsed = productSchema.safeParse(state);
+      if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Please check the fields.");
+      const result = state.id
+        ? await supabase.from("products").update(parsed.data).eq("id", state.id).select("id, name, description, price").single()
+        : await supabase.from("products").insert(parsed.data).select("id, name, description, price").single();
+      if (result.error) throw new Error("Could not save this product. Please try again.");
+      return result.data;
     },
-    onSuccess: (_d, state) => {
-      toast.success(state.id ? "Laptop updated" : "Laptop added");
-      setForm(emptyForm);
-      setOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["laptops"] });
+    onSuccess: (product, state) => {
+      queryClient.setQueryData<Product[]>(["products"], (current = []) => state.id ? current.map((item) => item.id === product.id ? product : item) : [product, ...current]);
+      void queryClient.invalidateQueries({ queryKey: ["products"] });
+      setForm(emptyForm); setOpen(false);
+      toast.success(state.id ? "Product updated" : "Product added");
     },
-    onError: (e: unknown) => toast.error(friendlyError(e, "Could not save this laptop.")),
+    onError: (error) => toast.error(error.message.startsWith("Could not") ? friendlyError(error, "Could not save this product. Please try again.") : error.message),
   });
-
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("laptops").delete().eq("id", id);
-      if (error) throw error;
+      const { data, error } = await supabase.from("products").delete().eq("id", id).select("id").single();
+      if (error || !data) throw new Error("Could not delete this product. Please try again.");
+      return id;
     },
-    onSuccess: () => {
-      toast.success("Laptop deleted");
-      queryClient.invalidateQueries({ queryKey: ["laptops"] });
+    onSuccess: (id) => {
+      queryClient.setQueryData<Product[]>(["products"], (current = []) => current.filter((item) => item.id !== id));
+      void queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Product deleted");
     },
-    onError: (e: unknown) => toast.error(friendlyError(e, "Could not delete this laptop.")),
+    onError: () => toast.error("Could not delete this product. Please try again."),
   });
-
-
-
-
-
-  const [uploading, setUploading] = useState(false);
-
-  async function handleFile(file: File) {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please choose an image file.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be smaller than 5 MB.");
-      return;
-    }
-    setUploading(true);
-    try {
-      const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
-      const path = `${crypto.randomUUID()}.${ext || "jpg"}`;
-      const { error: upErr } = await supabase.storage
-        .from("laptop-images")
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (upErr) throw upErr;
-      const { data, error: urlErr } = await supabase.storage
-        .from("laptop-images")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (urlErr || !data?.signedUrl) throw urlErr ?? new Error("no url");
-      const url = new URL(data.signedUrl, window.location.origin).toString();
-      setForm((f) => ({ ...f, image_url: url }));
-      toast.success("Image uploaded");
-    } catch (e) {
-      toast.error(friendlyError(e, "Could not upload this image."));
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  const fields: Array<{ key: keyof FormState; label: string; type?: string }> = [
-    { key: "model", label: "Model name" },
-    { key: "price", label: "Price (USD)", type: "number" },
-    { key: "cpu", label: "CPU" },
-    { key: "gpu", label: "GPU" },
-    { key: "ram", label: "RAM" },
-    { key: "storage", label: "Storage" },
-  ];
-
+  function edit(product: Product) { setForm({ ...product, price: String(product.price) }); setOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }
   return (
-    <div className="min-h-screen grid-bg">
+    <div className="min-h-screen bg-background text-foreground">
       <NeonNav />
-      <main className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-10">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 sm:flex sm:flex-wrap sm:justify-between sm:gap-4">
-          <div className="min-w-0">
-            <h1 className="font-display text-xl font-black tracking-widest text-rgb sm:text-3xl">
-              MANAGE CATALOG
-            </h1>
-            <p className="mt-1 truncate text-xs text-muted-foreground sm:text-sm">
-              {laptops.length} units in inventory · signed in as {user.email}
-            </p>
-          </div>
-          <Button
-            variant="neon"
-            onClick={() => {
-              setForm(emptyForm);
-              setOpen(true);
-            }}
-          >
-            <Plus /> <span className="hidden min-[380px]:inline">Add laptop</span>
-          </Button>
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8 sm:py-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
+          <div><h1 className="text-2xl font-bold sm:text-3xl">Manage Products</h1><p className="mt-2 text-sm text-muted-foreground">{products.length} products</p></div>
+          <Button variant="secondary" className="h-10" onClick={() => { setForm(emptyForm); setOpen(true); }}><Plus /> Add product</Button>
         </div>
-
-        {open && (
-          <section className="neon-panel mt-6 animate-rise rounded-lg p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-sm uppercase tracking-widest text-secondary">
-                {form.id ? "Edit laptop" : "New laptop"}
-              </h2>
-              <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close">
-                <X />
-              </Button>
-            </div>
-            <form
-              className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                save.mutate(form);
-              }}
-            >
-              {fields.map((f) => (
-                <div key={f.key} className="space-y-2">
-                  <Label htmlFor={f.key}>{f.label}</Label>
-                  <Input
-                    id={f.key}
-                    type={f.type ?? "text"}
-                    required
-                    value={String(form[f.key] ?? "")}
-                    onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                  />
-                </div>
-              ))}
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="image_file">Laptop image</Label>
-                <div className="flex min-w-0 flex-col gap-3 min-[380px]:flex-row min-[380px]:items-center">
-                  {form.image_url ? (
-                    <img
-                      src={safeImageUrl(form.image_url)}
-                      alt="Selected laptop preview"
-                      className="size-14 shrink-0 rounded-md border border-border object-cover"
-                    />
-                  ) : null}
-                  <input
-                    id="image_file"
-                    type="file"
-                    accept="image/*"
-                    className="block min-w-0 w-full text-xs text-muted-foreground file:mr-2 file:rounded-md file:border file:border-secondary/60 file:bg-secondary/10 file:px-2 file:py-2 file:text-xs file:text-secondary sm:file:mr-3 sm:file:px-3"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void handleFile(file);
-                      e.target.value = "";
-                    }}
-                  />
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {uploading
-                    ? "Uploading image…"
-                    : form.image_url
-                      ? "Image ready."
-                      : "Choose an image from your device (max 5 MB)."}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <select
-                  id="category"
-                  className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                >
-                  {["Ultra Gaming", "Mid-Range", "Budget"].map((c) => (
-                    <option key={c} value={c} className="bg-card">
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-end sm:col-span-2 lg:col-span-4">
-                <Button
-                  className="w-full sm:w-auto"
-                  variant="whatsapp"
-                  type="submit"
-                  disabled={save.isPending || uploading || !form.image_url}
-                >
-                  {save.isPending
-                    ? "Saving…"
-                    : uploading
-                      ? "Uploading…"
-                      : form.id
-                        ? "Save changes"
-                        : "Add to catalog"}
-                </Button>
-              </div>
-            </form>
-          </section>
-        )}
-
-        <section className="neon-panel mt-6 hidden overflow-x-auto rounded-lg md:block">
-          <table className="w-full min-w-[820px] text-left text-sm">
-            <thead className="font-display text-[11px] uppercase tracking-widest text-secondary">
-              <tr className="border-b border-border">
-                <th className="p-3">Model</th>
-                <th className="p-3">Category</th>
-                <th className="p-3">Price</th>
-                <th className="p-3">CPU</th>
-                <th className="p-3">GPU</th>
-                <th className="p-3">RAM</th>
-                <th className="p-3">Storage</th>
-                <th className="p-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading && (
-                <tr>
-                  <td className="p-4 text-muted-foreground" colSpan={8}>
-                    Loading inventory…
-                  </td>
-                </tr>
-              )}
-              {laptops.map((l) => (
-                <tr key={l.id} className="border-b border-border/50 hover:bg-muted/40">
-                  <td className="p-3 font-medium text-foreground">{l.model}</td>
-                  <td className="p-3 text-primary">{l.category}</td>
-                  <td className="p-3 text-accent">{formatPrice(l.price)}</td>
-                  <td className="p-3 text-muted-foreground">{l.cpu}</td>
-                  <td className="p-3 text-muted-foreground">{l.gpu}</td>
-                  <td className="p-3 text-muted-foreground">{l.ram}</td>
-                  <td className="p-3 text-muted-foreground">{l.storage}</td>
-                  <td className="p-3">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="cyber"
-                        size="icon"
-                        aria-label={`Edit ${l.model}`}
-                        onClick={() => {
-                          setForm({ ...l, price: String(l.price) });
-                          setOpen(true);
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                      >
-                        <Pencil />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        aria-label={`Delete ${l.model}`}
-                        onClick={() => {
-                          if (confirm(`Delete ${l.model}?`)) remove.mutate(l.id);
-                        }}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-
-        <section className="mt-5 grid gap-3 md:hidden" aria-label="Inventory list">
-          {isLoading && <p className="py-6 text-center text-muted-foreground">Loading inventory…</p>}
-          {laptops.map((l) => (
-            <article key={l.id} className="neon-panel min-w-0 rounded-lg p-3">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-                <div className="min-w-0">
-                  <h2 className="truncate font-display text-sm font-bold text-foreground">{l.model}</h2>
-                  <p className="mt-1 text-xs text-primary">{l.category}</p>
-                </div>
-                <span className="shrink-0 font-display text-sm font-bold text-accent">{formatPrice(l.price)}</span>
-              </div>
-              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                <div className="min-w-0"><dt className="text-secondary">CPU</dt><dd className="truncate text-muted-foreground">{l.cpu}</dd></div>
-                <div className="min-w-0"><dt className="text-secondary">GPU</dt><dd className="truncate text-muted-foreground">{l.gpu}</dd></div>
-                <div className="min-w-0"><dt className="text-secondary">RAM</dt><dd className="truncate text-muted-foreground">{l.ram}</dd></div>
-                <div className="min-w-0"><dt className="text-secondary">Storage</dt><dd className="truncate text-muted-foreground">{l.storage}</dd></div>
-              </dl>
-              <div className="mt-3 flex justify-end gap-2 border-t border-border/50 pt-3">
-                <Button variant="cyber" size="sm" onClick={() => { setForm({ ...l, price: String(l.price) }); setOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
-                  <Pencil /> Edit
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => { if (confirm(`Delete ${l.model}?`)) remove.mutate(l.id); }}>
-                  <Trash2 /> Delete
-                </Button>
-              </div>
-            </article>
-          ))}
-        </section>
-
-        <Button variant="ghost" className="mt-6" onClick={() => router.navigate({ to: "/" })}>
-          ← Back to storefront
-        </Button>
+        {open && <section className="border-b border-border py-6">
+          <div className="mb-5 flex items-center justify-between"><h2 className="text-lg font-semibold">{form.id ? "Edit product" : "New product"}</h2><Button variant="ghost" size="icon" aria-label="Close product form" disabled={save.isPending} onClick={() => setOpen(false)}><X /></Button></div>
+          <form className="grid max-w-2xl gap-5" onSubmit={(event) => { event.preventDefault(); save.mutate(form); }}>
+            <div className="space-y-2"><Label htmlFor="product-name">Product Name</Label><Input id="product-name" dir="auto" required maxLength={120} value={form.name} disabled={save.isPending} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="description">Description</Label><Textarea id="description" dir="auto" required maxLength={4000} rows={5} className="resize-y" disabled={save.isPending} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></div>
+            <div className="max-w-xs space-y-2"><Label htmlFor="price">Price</Label><Input id="price" type="number" required min="0" max="1000000" step="0.01" disabled={save.isPending} value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} /></div>
+            <div className="flex gap-3"><Button variant="secondary" type="submit" disabled={save.isPending}><Check />{save.isPending ? "Saving…" : "Save product"}</Button><Button variant="outline" type="button" disabled={save.isPending} onClick={() => setOpen(false)}>Cancel</Button></div>
+          </form>
+        </section>}
+        {isLoading ? <p className="py-12 text-muted-foreground">Loading products…</p>
+          : isError ? <div className="py-12"><p className="text-muted-foreground">Could not load products.</p><Button variant="outline" className="mt-4" onClick={() => void refetch()}>Try again</Button></div>
+          : products.length === 0 ? <div className="flex flex-col items-center py-20 text-muted-foreground"><PackageOpen className="mb-4 size-9" /><p>No products yet.</p></div>
+          : <div className="divide-y divide-border">{products.map((product) => <article key={product.id} className="grid min-w-0 gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="min-w-0"><h2 dir="auto" className="break-words text-lg font-semibold">{product.name}</h2><p dir="auto" className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">{product.description}</p><p className="mt-3 font-semibold text-secondary">{formatPrice(product.price)}</p></div>
+            <div className="flex items-start gap-2"><Button variant="outline" size="icon" aria-label={`Edit ${product.name}`} title="Edit product" disabled={save.isPending} onClick={() => edit(product)}><Pencil /></Button><Button variant="ghost" size="icon" className="text-destructive" aria-label={`Delete ${product.name}`} title="Delete product" disabled={remove.isPending} onClick={() => { if (confirm(`Delete ${product.name}?`)) remove.mutate(product.id); }}><Trash2 /></Button></div>
+          </article>)}</div>}
       </main>
     </div>
   );

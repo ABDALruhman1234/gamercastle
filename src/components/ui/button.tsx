@@ -19,7 +19,7 @@ const buttonVariants = cva(
         neon: "font-display tracking-widest uppercase border border-primary/60 bg-primary/10 text-primary shadow-[var(--glow-pink)] hover:bg-primary/20",
         cyber: "font-display tracking-widest uppercase border border-secondary/60 bg-secondary/10 text-secondary shadow-[var(--glow-cyan)] hover:bg-secondary/20",
         whatsapp:
-          "font-display tracking-wider uppercase text-black bg-[image:var(--gradient-lime)] shadow-[var(--glow-lime)] hover:brightness-110",
+          "font-display tracking-wider uppercase text-accent-foreground bg-[image:var(--gradient-lime)] shadow-[var(--glow-lime)] hover:brightness-110",
       },
       size: {
         default: "h-9 px-4 py-2",

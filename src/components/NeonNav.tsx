@@ -47,11 +47,7 @@ export function NeonNav() {
             >
               Sign out
             </Button>
-          ) : (
-            <Button variant="neon" size="sm" className="px-2 text-[10px] min-[360px]:px-2.5 min-[360px]:text-xs sm:px-3 sm:text-sm" asChild>
-              <Link to="/auth">Admin Login</Link>
-            </Button>
-          )}
+          ) : null}
         </div>
       </nav>
     </header>

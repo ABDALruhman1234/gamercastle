@@ -8,6 +8,13 @@
       "when": 1791706872677,
       "tag": "0000_create_osint_products",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791807119681,
+      "tag": "0001_migration",
+      "breakpoints": true
     }
   ]
 }

@@ -10,10 +10,11 @@ import { ADMIN_EMAIL } from "@/lib/products";
 import { friendlyError } from "@/lib/laptop-schema";
 
 
-export const Route = createFileRoute("/auth")({
+export const Route = createFileRoute("/abd123")({
   head: () => ({
     meta: [
       { title: "Admin Login | OSINT store" },
+      { name: "robots", content: "noindex, nofollow" },
       {
         name: "description",
         content: "Secure staff login for the OSINT store product catalog manager.",

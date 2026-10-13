@@ -20,7 +20,7 @@ export function NeonNav() {
 
   async function signOut() {
     await supabase.auth.signOut();
-    router.navigate({ to: "/auth", replace: true });
+    router.navigate({ to: "/", replace: true });
   }
 
   return (
